@@ -6,7 +6,6 @@ import random
 pyautogui.PAUSE = 0
 
 # Local vars
-
 TILES_X_START = 43 #671
 TILES_Y_START = 370 #394
 GRID_OFFSET = 24
@@ -18,12 +17,8 @@ CHECK_GRID_Y_START = TILES_Y_START + 18
 UNKNOWN = -1
 MINE = 9
 
+# colors
 LOST = (238, 102, 102)
-
-# watever flags, change later
-clicked = []
-cnt = 0
-changed = False
 
 num_color = [(56, 64, 72),      # 0
              (124, 199, 255),   # 1
@@ -34,7 +29,7 @@ num_color = [(56, 64, 72),      # 0
              (102, 204, 204),   # 6
              (152, 152, 152),   # 7
              (247, 83, 83),     # flagged mine -> 9 (*)
-             (76, 84, 92)]      # unknow -> map into -1 on matrix
+             (76, 84, 92)]      # unknow -> map into -1 on matrix (.)
 
 # get tile pos
 def tiles_location(i, j):
@@ -45,6 +40,7 @@ def tiles_location(i, j):
 # check for number
 def dist_to_colors(color1, color2):
     dist = 0
+
     for i in range(3):
         dist += (color2[i] - color1[i]) ** 2
 
@@ -63,9 +59,10 @@ def closest_num(color_at_pixel):
         
     return best_match
 
-# mapping logic
+# mapping, board logic
 def avg_color(colors):
     r = g = b = 0
+
     for c in colors:
         r += (c[0] / len(colors))
         g += (c[1] / len(colors))
@@ -83,6 +80,7 @@ def read_tile(i, j):
 
     # 2x2 rec cheecking -> avg
     area = []
+
     for dy in range(2):
         for dx in range(2):
             px = CHECK_GRID_X_START + j * GRID_OFFSET + dx
@@ -113,6 +111,23 @@ def read_board(height, width):
         for j in range(width):
             board[i][j] = read_tile(i, j)
 
+    return board
+
+def remap_board(clicked, board, height, width):
+    for pos in clicked:
+        i = pos[0]
+        j = pos[1]
+        num = read_tile(i, j)
+
+        if num == 0:
+            board = read_board(height, width)
+            return board
+        elif num == 9:
+            board[i][j] = 9
+        else:
+            board[i][j] = num
+
+    print("Mapping")
     return board
 
 def print_board(board):
@@ -216,7 +231,7 @@ def initial_clicking(height, width):
         pyautogui.click(dx + int(GRID_OFFSET / 2), dy + int(GRID_OFFSET / 2))
         pyautogui.moveTo(TILES_X_START - 20, TILES_Y_START - 20)
 
-        time.sleep(0.1)
+        time.sleep(0.15)
         num = read_tile(base_y_grid, base_x_grid)
         if lost(base_y_grid, base_x_grid):
             print("Bad choice i guess?")
@@ -225,13 +240,10 @@ def initial_clicking(height, width):
             break
 
         print(f"Clicked, found {num}. Continuing")
+    
+    print("My job here is done, good luck")
 
 # solver
-
-# board[i][j]
-# if remaining_mines = unknow_neighbours -> click
-# edit that pos inside the matrix -> 9 or mine
-
 def have_dupe(i, j, clicked):
     for coords in range(len(clicked)):
         if (i, j) == clicked[coords]:
@@ -262,22 +274,6 @@ def click(actions):
 
     pyautogui.moveTo(TILES_X_START - 20, TILES_Y_START - 20)
 
-def remap_board(clicked, board, height, width):
-    for pos in clicked:
-        i = pos[0]
-        j = pos[1]
-        num = read_tile(i, j)
-
-        if num == 0:
-            board = read_board(height, width)
-            return board
-        elif num == 9:
-            board[i][j] = 9
-        else:
-            board[i][j] = num
-
-    return board
-
 def solver(board, height, width):
     # build action boards
     actions = []
@@ -298,9 +294,11 @@ def solver(board, height, width):
                     # avoid border
                     if i + y < 0 or i + y >= height or j + x < 0 or j + x >= width:
                         continue
+
                     # avoid middle
                     if x == 0 and y == 0:
                         continue
+
                     # count unknow
                     if board[i + y][j + x] == -1:
                         unknown_tiles += 1
@@ -316,17 +314,21 @@ def solver(board, height, width):
             if remaining_mines == unknown_tiles:
                 # all mines
                 actions += location
+
             if remaining_mines == 0:
                 # all safe
                 for y in [-1, 0, 1]:
                     for x in [-1, 0, 1]:
                         if i + y < 0 or i + y >= height or j + x < 0 or j + x >= width:
                             continue
+
                         if board[i + y][j + x] == -1:
                             actions.append((i + y, j + x, "left"))
+
     if len(actions) == 0:
         should_stop()
         # return False # for brute force later
+        
     click(actions)
     return True
 
