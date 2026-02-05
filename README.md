@@ -102,3 +102,12 @@ It is intentionally written without using any game internals.
 - Designed for learning and experimentation, not speedrunning
 
 ---
+
+## Future Versions
+
+Currently in v2, with mapping and rule based solver done.
+Next major version:
+- v3: bruteforcing
+- v4: optimization
+
+---
