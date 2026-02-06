@@ -64,9 +64,10 @@ If the solver stops with unrevealed tiles remaining, the position is **logically
 - This solver is **deterministic only**
 - It does **not** guess or brute-force ambiguous positions
 - Some boards will require guessing by design (this is expected behavior)
+- Local brute-force on frontier regions
+- Slow
 
 Future improvements could include:
-- Local brute-force on frontier regions
 - Probability-based guessing
 - SAT/CSP-based solving
 
@@ -103,11 +104,12 @@ It is intentionally written without using any game internals.
 
 ---
 
-## Future Versions
+## Versions
 
-Currently in v2, with mapping and rule based solver done.
-Next major version:
-- v3: bruteforcing
-- v4: optimization
+Currently in v3:
+- v1: Vision and board mapping
+- v2: Basic rule-based solver
+- v3: Solver with Brute-forcing
+- v4: Optimization
 
 ---
